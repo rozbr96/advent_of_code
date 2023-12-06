@@ -52,6 +52,40 @@ getCardPoints line = do
   if winningNumbersAmount == 0 then 0 else 2 ^ (winningNumbersAmount - 1)
 
 
+getCardsAmount :: [Int] -> [Int] -> Int
+getCardsAmount counters cardsAmounts = do
+  let counters_cardsAmounts = zip counters cardsAmounts
+  let valid_counters_cardsAmounts = filter (\ccA -> fst ccA > 0) counters_cardsAmounts
+  let valid_cardsAmounts = map snd valid_counters_cardsAmounts
+
+  1 + sum valid_cardsAmounts
+
+
+processLine :: String -> ([Int], [Int], Int) -> ([Int], [Int], Int)
+processLine line (counters, cardsAmounts, totalCardsAmount) = do
+  let lineNumbers = getNumbersPart line
+
+  let winningNumbers = getWinningNumbers lineNumbers
+  let ownedNumbers = getOwnedNumbers lineNumbers
+
+  let cardsAmount = getCardsAmount counters cardsAmounts
+  let winningNumbersAmount = getOwnedWinningNumbersAmount winningNumbers ownedNumbers
+
+  let newCounters = map pred counters ++ [winningNumbersAmount]
+  let newCardsAmounts = cardsAmounts ++ [cardsAmount]
+
+  (newCounters, newCardsAmounts, cardsAmount)
+
+
+getTotalCardsAmount :: [String] -> ([Int], [Int], Int) -> Int
+getTotalCardsAmount [] _ = 0
+getTotalCardsAmount (line:remainingLines) previousData = do
+  let (counters, cardsAmounts, cardsAmount) = processLine line previousData
+
+  cardsAmount + getTotalCardsAmount remainingLines (counters, cardsAmounts, cardsAmount)
+
+
+
 main = do
   -- text <- readFile "samples/part_one.txt"
   text <- readFile "input.txt"
@@ -60,3 +94,4 @@ main = do
   let cardsPoints = map getCardPoints lines
 
   print $ sum cardsPoints
+  print $ getTotalCardsAmount lines ([], [], 0)
